@@ -87,6 +87,9 @@ h1 {
   cursor: grab;
   font-size: 15px;
   font-weight: 700;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .drag-handle:active {

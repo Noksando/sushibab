@@ -16,6 +16,8 @@ const billAmount = document.getElementById("billAmount");
 let currentState = { stores: {}, openedBills: [] };
 let selectedStore = "";
 let dragFromIndex = null;
+let touchDragFromIndex = null;
+let touchDropIndex = null;
 
 function formatEUR(amount) {
   return new Intl.NumberFormat("de-DE", {
@@ -60,6 +62,7 @@ function renderInventory() {
   items.forEach(([itemName, quantity], index) => {
     const row = document.createElement("div");
     row.className = "inventory-item";
+    row.dataset.index = String(index);
 
     const dragHandle = document.createElement("button");
     dragHandle.className = "drag-handle";
@@ -77,9 +80,60 @@ function renderInventory() {
     dragHandle.addEventListener("dragend", () => {
       dragFromIndex = null;
       row.classList.remove("drag-source");
-      document.querySelectorAll(".inventory-item.drag-over").forEach((el) => {
-        el.classList.remove("drag-over");
-      });
+      clearDragHighlights();
+    });
+    dragHandle.addEventListener("touchstart", () => {
+      touchDragFromIndex = index;
+      touchDropIndex = null;
+      row.classList.add("drag-source");
+    });
+    dragHandle.addEventListener(
+      "touchmove",
+      (event) => {
+        if (touchDragFromIndex === null) {
+          return;
+        }
+        event.preventDefault();
+        const touch = event.touches[0];
+        if (!touch) {
+          return;
+        }
+        clearDragHighlights();
+        const target = document
+          .elementFromPoint(touch.clientX, touch.clientY)
+          ?.closest(".inventory-item");
+        if (!target) {
+          touchDropIndex = null;
+          return;
+        }
+        target.classList.add("drag-over");
+        const nextIndex = Number(target.dataset.index);
+        touchDropIndex = Number.isInteger(nextIndex) ? nextIndex : null;
+      },
+      { passive: false }
+    );
+    dragHandle.addEventListener("touchend", () => {
+      row.classList.remove("drag-source");
+      clearDragHighlights();
+      if (
+        touchDragFromIndex !== null &&
+        touchDropIndex !== null &&
+        touchDragFromIndex !== touchDropIndex
+      ) {
+        socket.emit("inventory:reorder", {
+          storeName: selectedStore,
+          fromIndex: touchDragFromIndex,
+          toIndex: touchDropIndex
+        });
+      }
+      touchDragFromIndex = null;
+      touchDropIndex = null;
+    });
+    dragHandle.addEventListener("touchcancel", () => {
+      row.classList.remove("drag-source");
+      clearDragHighlights();
+      touchDragFromIndex = null;
+      touchDropIndex = null;
     });
 
     const name = document.createElement("div");
@@ -142,6 +196,12 @@ function renderInventory() {
     controls.append(minus, qty, plus, remove);
     row.append(dragHandle, name, controls);
     inventoryListEl.appendChild(row);
+  });
+}
+
+function clearDragHighlights() {
+  document.querySelectorAll(".inventory-item.drag-over").forEach((el) => {
+    el.classList.remove("drag-over");
   });
 }
 
