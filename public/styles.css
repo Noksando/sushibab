@@ -28,6 +28,12 @@ h1 {
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
 }
 
+.hint {
+  color: #475569;
+  margin: 4px 0 10px;
+  font-size: 14px;
+}
+
 .tabs {
   display: flex;
   gap: 8px;
@@ -61,6 +67,11 @@ h1 {
   padding: 8px;
   border: 1px solid #dce4ea;
   border-radius: 10px;
+  cursor: grab;
+}
+
+.inventory-item.dragging {
+  opacity: 0.45;
 }
 
 .qty-controls {
@@ -76,6 +87,14 @@ h1 {
   border-radius: 8px;
   background: #e2e8f0;
   cursor: pointer;
+}
+
+.item-remove {
+  width: auto !important;
+  height: auto !important;
+  padding: 6px 10px;
+  background: #ef4444 !important;
+  color: #fff;
 }
 
 .row-form {

@@ -15,11 +15,12 @@ const billAmount = document.getElementById("billAmount");
 
 let currentState = { stores: {}, openedBills: [] };
 let selectedStore = "";
+let dragFromIndex = null;
 
-function formatKRW(amount) {
-  return new Intl.NumberFormat("ko-KR", {
+function formatEUR(amount) {
+  return new Intl.NumberFormat("de-DE", {
     style: "currency",
-    currency: "KRW"
+    currency: "EUR"
   }).format(amount);
 }
 
@@ -59,6 +60,7 @@ function renderInventory() {
   items.forEach(([itemName, quantity]) => {
     const row = document.createElement("div");
     row.className = "inventory-item";
+    row.draggable = true;
 
     const name = document.createElement("div");
     name.textContent = `${itemName}`;
@@ -81,7 +83,40 @@ function renderInventory() {
       socket.emit("inventory:change", { storeName: selectedStore, itemName, delta: 1 });
     });
 
-    controls.append(minus, qty, plus);
+    const remove = document.createElement("button");
+    remove.className = "item-remove";
+    remove.textContent = "삭제";
+    remove.addEventListener("click", () => {
+      socket.emit("inventory:removeItem", { storeName: selectedStore, itemName });
+    });
+
+    row.addEventListener("dragstart", () => {
+      dragFromIndex = items.findIndex(([nameValue]) => nameValue === itemName);
+      row.classList.add("dragging");
+    });
+
+    row.addEventListener("dragend", () => {
+      dragFromIndex = null;
+      row.classList.remove("dragging");
+    });
+
+    row.addEventListener("dragover", (event) => {
+      event.preventDefault();
+    });
+
+    row.addEventListener("drop", () => {
+      const dropIndex = items.findIndex(([nameValue]) => nameValue === itemName);
+      if (dragFromIndex === null || dropIndex === -1 || dragFromIndex === dropIndex) {
+        return;
+      }
+      socket.emit("inventory:reorder", {
+        storeName: selectedStore,
+        fromIndex: dragFromIndex,
+        toIndex: dropIndex
+      });
+    });
+
+    controls.append(minus, qty, plus, remove);
     row.append(name, controls);
     inventoryListEl.appendChild(row);
   });
@@ -104,7 +139,7 @@ function renderBills() {
         <button class="bill-remove">결제완료</button>
       </div>
       <div>수령일: ${bill.receivedAt}</div>
-      <div>금액: ${formatKRW(bill.amount)}</div>
+      <div>금액: ${formatEUR(bill.amount)}</div>
     `;
     li.querySelector(".bill-remove").addEventListener("click", () => {
       socket.emit("bill:remove", { id: bill.id });

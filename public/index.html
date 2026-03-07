@@ -12,6 +12,7 @@
 
       <section class="card">
         <h2>매장별 재고</h2>
+        <p class="hint">재고 항목을 드래그해서 순서를 바꿀 수 있습니다.</p>
         <div id="storeTabs" class="tabs"></div>
         <div id="inventoryList" class="inventory-list"></div>
 
@@ -27,7 +28,7 @@
         <form id="billForm" class="row-form">
           <input id="billCompany" type="text" placeholder="회사명" required />
           <input id="billDate" type="date" required />
-          <input id="billAmount" type="number" min="0" placeholder="금액" required />
+          <input id="billAmount" type="number" min="0" placeholder="금액 (EUR)" required />
           <button type="submit">영수증 등록</button>
         </form>
         <ul id="billList" class="bill-list"></ul>

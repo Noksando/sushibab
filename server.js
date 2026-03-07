@@ -91,6 +91,39 @@ io.on("connection", (socket) => {
     broadcastState();
   });
 
+  socket.on("inventory:removeItem", ({ storeName, itemName }) => {
+    if (!state.stores[storeName] || typeof state.stores[storeName][itemName] !== "number") {
+      return;
+    }
+    delete state.stores[storeName][itemName];
+    saveData(state);
+    broadcastState();
+  });
+
+  socket.on("inventory:reorder", ({ storeName, fromIndex, toIndex }) => {
+    if (!state.stores[storeName]) {
+      return;
+    }
+    const entries = Object.entries(state.stores[storeName]);
+    if (
+      !Number.isInteger(fromIndex) ||
+      !Number.isInteger(toIndex) ||
+      fromIndex < 0 ||
+      toIndex < 0 ||
+      fromIndex >= entries.length ||
+      toIndex >= entries.length ||
+      fromIndex === toIndex
+    ) {
+      return;
+    }
+
+    const [moved] = entries.splice(fromIndex, 1);
+    entries.splice(toIndex, 0, moved);
+    state.stores[storeName] = Object.fromEntries(entries);
+    saveData(state);
+    broadcastState();
+  });
+
   socket.on("bill:add", ({ company, receivedAt, amount }) => {
     if (!company || !receivedAt || !Number.isFinite(amount) || amount < 0) {
       return;
