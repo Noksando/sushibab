@@ -9,7 +9,7 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
-const DATA_FILE = path.join(__dirname, "data", "store.json");
+const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, "data", "store.json");
 
 app.use(express.static(path.join(__dirname, "public")));
 
