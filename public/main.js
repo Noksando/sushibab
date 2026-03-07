@@ -15,6 +15,7 @@ const billAmount = document.getElementById("billAmount");
 
 let currentState = { stores: {}, openedBills: [] };
 let selectedStore = "";
+let dragFromIndex = null;
 
 function formatEUR(amount) {
   return new Intl.NumberFormat("de-DE", {
@@ -56,12 +57,34 @@ function renderInventory() {
     return;
   }
 
-  items.forEach(([itemName, quantity]) => {
+  items.forEach(([itemName, quantity], index) => {
     const row = document.createElement("div");
     row.className = "inventory-item";
 
+    const dragHandle = document.createElement("button");
+    dragHandle.className = "drag-handle";
+    dragHandle.textContent = "☰";
+    dragHandle.title = "드래그해서 순서 변경";
+    dragHandle.draggable = true;
+    dragHandle.addEventListener("dragstart", (event) => {
+      dragFromIndex = index;
+      row.classList.add("drag-source");
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", String(index));
+      }
+    });
+    dragHandle.addEventListener("dragend", () => {
+      dragFromIndex = null;
+      row.classList.remove("drag-source");
+      document.querySelectorAll(".inventory-item.drag-over").forEach((el) => {
+        el.classList.remove("drag-over");
+      });
+    });
+
     const name = document.createElement("div");
     name.textContent = `${itemName}`;
+    name.className = "item-name";
 
     const controls = document.createElement("div");
     controls.className = "qty-controls";
@@ -81,73 +104,45 @@ function renderInventory() {
       socket.emit("inventory:change", { storeName: selectedStore, itemName, delta: 1 });
     });
 
-    const actionGroup = document.createElement("div");
-    actionGroup.className = "item-menu";
-
-    const menuBtn = document.createElement("button");
-    menuBtn.className = "item-menu-btn";
-    menuBtn.textContent = "☰";
-    menuBtn.title = "항목 메뉴";
-    menuBtn.addEventListener("click", (event) => {
-      event.stopPropagation();
-      const alreadyOpen = actionGroup.classList.contains("open");
-      document.querySelectorAll(".item-menu.open").forEach((el) => el.classList.remove("open"));
-      if (!alreadyOpen) {
-        actionGroup.classList.add("open");
-      }
-    });
-
-    const menuPanel = document.createElement("div");
-    menuPanel.className = "item-menu-panel";
-
-    const moveUp = document.createElement("button");
-    moveUp.textContent = "위로";
-    moveUp.disabled = indexOfItem(items, itemName) === 0;
-    moveUp.addEventListener("click", () => {
-      const currentIndex = indexOfItem(items, itemName);
-      if (currentIndex <= 0) {
-        return;
-      }
-      socket.emit("inventory:reorder", {
-        storeName: selectedStore,
-        fromIndex: currentIndex,
-        toIndex: currentIndex - 1
-      });
-    });
-
-    const moveDown = document.createElement("button");
-    moveDown.textContent = "아래로";
-    moveDown.disabled = indexOfItem(items, itemName) === items.length - 1;
-    moveDown.addEventListener("click", () => {
-      const currentIndex = indexOfItem(items, itemName);
-      if (currentIndex < 0 || currentIndex >= items.length - 1) {
-        return;
-      }
-      socket.emit("inventory:reorder", {
-        storeName: selectedStore,
-        fromIndex: currentIndex,
-        toIndex: currentIndex + 1
-      });
-    });
-
     const remove = document.createElement("button");
-    remove.className = "menu-danger";
+    remove.className = "item-remove";
     remove.textContent = "삭제";
     remove.addEventListener("click", () => {
       socket.emit("inventory:removeItem", { storeName: selectedStore, itemName });
     });
 
-    menuPanel.append(moveUp, moveDown, remove);
-    actionGroup.append(menuBtn, menuPanel);
+    row.addEventListener("dragover", (event) => {
+      if (dragFromIndex === null) {
+        return;
+      }
+      event.preventDefault();
+      row.classList.add("drag-over");
+    });
 
-    controls.append(minus, qty, plus, actionGroup);
-    row.append(name, controls);
+    row.addEventListener("dragleave", () => {
+      row.classList.remove("drag-over");
+    });
+
+    row.addEventListener("drop", (event) => {
+      if (dragFromIndex === null) {
+        return;
+      }
+      event.preventDefault();
+      row.classList.remove("drag-over");
+      if (dragFromIndex === index) {
+        return;
+      }
+      socket.emit("inventory:reorder", {
+        storeName: selectedStore,
+        fromIndex: dragFromIndex,
+        toIndex: index
+      });
+    });
+
+    controls.append(minus, qty, plus, remove);
+    row.append(dragHandle, name, controls);
     inventoryListEl.appendChild(row);
   });
-}
-
-function indexOfItem(items, itemName) {
-  return items.findIndex(([nameValue]) => nameValue === itemName);
 }
 
 function renderBills() {
@@ -201,8 +196,4 @@ socket.on("state:update", (state) => {
   renderStoreTabs();
   renderInventory();
   renderBills();
-});
-
-document.addEventListener("click", () => {
-  document.querySelectorAll(".item-menu.open").forEach((el) => el.classList.remove("open"));
 });

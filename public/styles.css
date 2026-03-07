@@ -61,12 +61,40 @@ h1 {
 
 .inventory-item {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 8px;
   padding: 8px;
   border: 1px solid #dce4ea;
   border-radius: 10px;
+}
+
+.inventory-item.drag-over {
+  border-color: #0f766e;
+  background: #f0fdfa;
+}
+
+.inventory-item.drag-source {
+  opacity: 0.5;
+}
+
+.drag-handle {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 8px;
+  background: #e2e8f0;
+  cursor: grab;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.item-name {
+  min-width: 0;
 }
 
 .qty-controls {
@@ -84,50 +112,10 @@ h1 {
   cursor: pointer;
 }
 
-.item-menu {
-  position: relative;
-}
-
-.item-menu-btn {
-  width: 34px !important;
-  height: 28px !important;
-  font-size: 16px;
-  font-weight: 700;
-}
-
-.item-menu-panel {
-  position: absolute;
-  top: 34px;
-  right: 0;
-  z-index: 10;
-  display: none;
-  min-width: 90px;
-  padding: 6px;
-  background: #fff;
-  border: 1px solid #dce4ea;
-  border-radius: 8px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
-}
-
-.item-menu.open .item-menu-panel {
-  display: grid;
-  gap: 6px;
-}
-
-.item-menu-panel button {
+.item-remove {
   width: auto !important;
   height: auto !important;
-  padding: 7px 8px;
-  text-align: left;
-  background: #eef2f7 !important;
-}
-
-.item-menu-panel button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.item-menu-panel .menu-danger {
+  padding: 6px 10px;
   background: #ef4444 !important;
   color: #fff;
 }
