@@ -38,8 +38,27 @@ const defaultData = {
       receivedAt: "2026-03-05",
       amount: 180000
     }
-  ]
+  ],
+  paidBills: []
 };
+
+function normalizeState(rawData) {
+  const next = rawData && typeof rawData === "object" ? rawData : {};
+  if (!next.stores || typeof next.stores !== "object") {
+    next.stores = structuredClone(defaultData.stores);
+  }
+  if (!Array.isArray(next.openedBills)) {
+    next.openedBills = [];
+  }
+  if (!Array.isArray(next.paidBills)) {
+    next.paidBills = [];
+  }
+  next.paidBills = next.paidBills
+    .filter((bill) => bill && typeof bill === "object")
+    .sort((a, b) => String(b.paidAt || "").localeCompare(String(a.paidAt || "")))
+    .slice(0, 10);
+  return next;
+}
 
 function readData() {
   try {
@@ -48,7 +67,7 @@ function readData() {
       return structuredClone(defaultData);
     }
     const raw = fs.readFileSync(DATA_FILE, "utf8");
-    return JSON.parse(raw);
+    return normalizeState(JSON.parse(raw));
   } catch (error) {
     console.error("Failed to read data file:", error);
     return structuredClone(defaultData);
@@ -140,7 +159,18 @@ io.on("connection", (socket) => {
   });
 
   socket.on("bill:remove", ({ id }) => {
+    const target = state.openedBills.find((bill) => bill.id === id);
+    if (!target) {
+      return;
+    }
     state.openedBills = state.openedBills.filter((bill) => bill.id !== id);
+    state.paidBills.unshift({
+      ...target,
+      paidAt: new Date().toISOString()
+    });
+    state.paidBills = state.paidBills
+      .sort((a, b) => String(b.paidAt || "").localeCompare(String(a.paidAt || "")))
+      .slice(0, 10);
     saveData(state);
     broadcastState();
   });

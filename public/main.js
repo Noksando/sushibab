@@ -3,6 +3,7 @@ const socket = io();
 const storeTabsEl = document.getElementById("storeTabs");
 const inventoryListEl = document.getElementById("inventoryList");
 const billListEl = document.getElementById("billList");
+const paidBillListEl = document.getElementById("paidBillList");
 
 const addItemForm = document.getElementById("addItemForm");
 const newItemName = document.getElementById("newItemName");
@@ -13,7 +14,7 @@ const billCompany = document.getElementById("billCompany");
 const billDate = document.getElementById("billDate");
 const billAmount = document.getElementById("billAmount");
 
-let currentState = { stores: {}, openedBills: [] };
+let currentState = { stores: {}, openedBills: [], paidBills: [] };
 let selectedStore = "";
 let dragFromIndex = null;
 let touchDragFromIndex = null;
@@ -231,6 +232,45 @@ function renderBills() {
   });
 }
 
+function formatDateTime(dateLike) {
+  if (!dateLike) {
+    return "-";
+  }
+  const date = new Date(dateLike);
+  if (Number.isNaN(date.getTime())) {
+    return String(dateLike);
+  }
+  return new Intl.DateTimeFormat("de-DE", {
+    dateStyle: "short",
+    timeStyle: "short"
+  }).format(date);
+}
+
+function renderPaidBills() {
+  paidBillListEl.innerHTML = "";
+  const paidBills = Array.isArray(currentState.paidBills) ? currentState.paidBills : [];
+
+  if (paidBills.length === 0) {
+    paidBillListEl.innerHTML = "<li>결제 완료 히스토리가 없습니다.</li>";
+    return;
+  }
+
+  paidBills.forEach((bill) => {
+    const li = document.createElement("li");
+    li.className = "bill-item";
+    li.innerHTML = `
+      <div class="bill-top">
+        <strong>${bill.company}</strong>
+        <span class="paid-tag">결제완료</span>
+      </div>
+      <div>수령일: ${bill.receivedAt}</div>
+      <div>금액: ${formatEUR(bill.amount)}</div>
+      <div>결제일시: ${formatDateTime(bill.paidAt)}</div>
+    `;
+    paidBillListEl.appendChild(li);
+  });
+}
+
 addItemForm.addEventListener("submit", (event) => {
   event.preventDefault();
   socket.emit("inventory:addItem", {
@@ -256,4 +296,5 @@ socket.on("state:update", (state) => {
   renderStoreTabs();
   renderInventory();
   renderBills();
+  renderPaidBills();
 });

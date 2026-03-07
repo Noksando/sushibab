@@ -166,6 +166,15 @@ h1 {
   gap: 8px;
 }
 
+.paid-tag {
+  background: #16a34a;
+  color: #fff;
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .bill-remove {
   border: 0;
   background: #ef4444;
