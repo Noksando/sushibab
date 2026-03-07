@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>스시밥 재고 관리</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>스시밥 재고 & 오픈 영수증</h1>
+
+      <section class="card">
+        <h2>매장별 재고</h2>
+        <div id="storeTabs" class="tabs"></div>
+        <div id="inventoryList" class="inventory-list"></div>
+
+        <form id="addItemForm" class="row-form">
+          <input id="newItemName" type="text" placeholder="새 재고명 (예: 새우튀김)" required />
+          <input id="newItemQty" type="number" min="0" placeholder="수량" required />
+          <button type="submit">재고 추가</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Opened Bill (미결제 영수증)</h2>
+        <form id="billForm" class="row-form">
+          <input id="billCompany" type="text" placeholder="회사명" required />
+          <input id="billDate" type="date" required />
+          <input id="billAmount" type="number" min="0" placeholder="금액" required />
+          <button type="submit">영수증 등록</button>
+        </form>
+        <ul id="billList" class="bill-list"></ul>
+      </section>
+    </main>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/main.js"></script>
+  </body>
+  </html>

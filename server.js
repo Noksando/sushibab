@@ -1,0 +1,118 @@
+const fs = require("fs");
+const path = require("path");
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
+
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
+
+const PORT = process.env.PORT || 3000;
+const DATA_FILE = path.join(__dirname, "data", "store.json");
+
+app.use(express.static(path.join(__dirname, "public")));
+
+const defaultData = {
+  stores: {
+    "1호점": {
+      "치킨바이트": 3,
+      "연어": 8,
+      "계란말이": 5
+    },
+    "2호점": {
+      "치킨바이트": 6,
+      "연어": 4,
+      "계란말이": 7
+    },
+    "부엌": {
+      "치킨바이트": 10,
+      "연어": 15,
+      "계란말이": 12
+    }
+  },
+  openedBills: [
+    {
+      id: "bill-1",
+      company: "동해식자재",
+      receivedAt: "2026-03-05",
+      amount: 180000
+    }
+  ]
+};
+
+function readData() {
+  try {
+    if (!fs.existsSync(DATA_FILE)) {
+      fs.writeFileSync(DATA_FILE, JSON.stringify(defaultData, null, 2), "utf8");
+      return structuredClone(defaultData);
+    }
+    const raw = fs.readFileSync(DATA_FILE, "utf8");
+    return JSON.parse(raw);
+  } catch (error) {
+    console.error("Failed to read data file:", error);
+    return structuredClone(defaultData);
+  }
+}
+
+function saveData(nextData) {
+  fs.writeFileSync(DATA_FILE, JSON.stringify(nextData, null, 2), "utf8");
+}
+
+let state = readData();
+
+function broadcastState() {
+  io.emit("state:update", state);
+}
+
+io.on("connection", (socket) => {
+  socket.emit("state:update", state);
+
+  socket.on("inventory:change", ({ storeName, itemName, delta }) => {
+    if (!state.stores[storeName] || typeof state.stores[storeName][itemName] !== "number") {
+      return;
+    }
+    const current = state.stores[storeName][itemName];
+    const next = Math.max(0, current + delta);
+    state.stores[storeName][itemName] = next;
+    saveData(state);
+    broadcastState();
+  });
+
+  socket.on("inventory:addItem", ({ storeName, itemName, quantity }) => {
+    if (!storeName || !itemName || !Number.isInteger(quantity) || quantity < 0) {
+      return;
+    }
+    if (!state.stores[storeName]) {
+      state.stores[storeName] = {};
+    }
+    state.stores[storeName][itemName] = quantity;
+    saveData(state);
+    broadcastState();
+  });
+
+  socket.on("bill:add", ({ company, receivedAt, amount }) => {
+    if (!company || !receivedAt || !Number.isFinite(amount) || amount < 0) {
+      return;
+    }
+    const newBill = {
+      id: `bill-${Date.now()}`,
+      company,
+      receivedAt,
+      amount
+    };
+    state.openedBills.unshift(newBill);
+    saveData(state);
+    broadcastState();
+  });
+
+  socket.on("bill:remove", ({ id }) => {
+    state.openedBills = state.openedBills.filter((bill) => bill.id !== id);
+    saveData(state);
+    broadcastState();
+  });
+});
+
+server.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
