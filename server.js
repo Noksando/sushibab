@@ -36,7 +36,8 @@ const defaultData = {
       id: "bill-1",
       company: "동해식자재",
       receivedAt: "2026-03-05",
-      amount: 180000
+      amount: 180000,
+      reference: ""
     }
   ],
   paidBills: []
@@ -143,7 +144,7 @@ io.on("connection", (socket) => {
     broadcastState();
   });
 
-  socket.on("bill:add", ({ company, receivedAt, amount }) => {
+  socket.on("bill:add", ({ company, receivedAt, amount, reference }) => {
     if (!company || !receivedAt || !Number.isFinite(amount) || amount < 0) {
       return;
     }
@@ -151,7 +152,8 @@ io.on("connection", (socket) => {
       id: `bill-${Date.now()}`,
       company,
       receivedAt,
-      amount
+      amount,
+      reference: typeof reference === "string" ? reference.trim() : ""
     };
     state.openedBills.unshift(newBill);
     saveData(state);

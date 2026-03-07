@@ -13,6 +13,7 @@ const billForm = document.getElementById("billForm");
 const billCompany = document.getElementById("billCompany");
 const billDate = document.getElementById("billDate");
 const billAmount = document.getElementById("billAmount");
+const billReference = document.getElementById("billReference");
 
 let currentState = { stores: {}, openedBills: [], paidBills: [] };
 let selectedStore = "";
@@ -228,6 +229,7 @@ function renderBills() {
       </div>
       <div>수령일: ${bill.receivedAt}</div>
       <div>금액: ${formatEUR(bill.amount)}</div>
+      <div>참고: ${bill.reference || "-"}</div>
     `;
     li.querySelector(".bill-remove").addEventListener("click", () => {
       socket.emit("bill:remove", { id: bill.id });
@@ -269,6 +271,7 @@ function renderPaidBills() {
       </div>
       <div>수령일: ${bill.receivedAt}</div>
       <div>금액: ${formatEUR(bill.amount)}</div>
+      <div>참고: ${bill.reference || "-"}</div>
       <div>결제일시: ${formatDateTime(bill.paidAt)}</div>
       <div class="bill-actions">
         <button class="bill-restore">되돌리기</button>
@@ -300,7 +303,8 @@ billForm.addEventListener("submit", (event) => {
   socket.emit("bill:add", {
     company: billCompany.value.trim(),
     receivedAt: billDate.value,
-    amount: Number(billAmount.value)
+    amount: Number(billAmount.value),
+    reference: billReference.value.trim()
   });
   billForm.reset();
 });
