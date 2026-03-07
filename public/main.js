@@ -163,6 +163,10 @@ function renderInventory() {
     remove.className = "item-remove";
     remove.textContent = "삭제";
     remove.addEventListener("click", () => {
+      const ok = window.confirm(`'${itemName}' 항목을 삭제할까요?`);
+      if (!ok) {
+        return;
+      }
       socket.emit("inventory:removeItem", { storeName: selectedStore, itemName });
     });
 
