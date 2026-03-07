@@ -266,7 +266,17 @@ function renderPaidBills() {
       <div>수령일: ${bill.receivedAt}</div>
       <div>금액: ${formatEUR(bill.amount)}</div>
       <div>결제일시: ${formatDateTime(bill.paidAt)}</div>
+      <div class="bill-actions">
+        <button class="bill-restore">되돌리기</button>
+        <button class="bill-delete-history">기록에서 삭제</button>
+      </div>
     `;
+    li.querySelector(".bill-restore").addEventListener("click", () => {
+      socket.emit("bill:restore", { id: bill.id });
+    });
+    li.querySelector(".bill-delete-history").addEventListener("click", () => {
+      socket.emit("bill:deletePaid", { id: bill.id });
+    });
     paidBillListEl.appendChild(li);
   });
 }

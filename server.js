@@ -174,6 +174,24 @@ io.on("connection", (socket) => {
     saveData(state);
     broadcastState();
   });
+
+  socket.on("bill:restore", ({ id }) => {
+    const target = state.paidBills.find((bill) => bill.id === id);
+    if (!target) {
+      return;
+    }
+    state.paidBills = state.paidBills.filter((bill) => bill.id !== id);
+    const { paidAt, ...restoredBill } = target;
+    state.openedBills.unshift(restoredBill);
+    saveData(state);
+    broadcastState();
+  });
+
+  socket.on("bill:deletePaid", ({ id }) => {
+    state.paidBills = state.paidBills.filter((bill) => bill.id !== id);
+    saveData(state);
+    broadcastState();
+  });
 });
 
 server.listen(PORT, () => {

@@ -183,3 +183,27 @@ h1 {
   padding: 6px 10px;
   cursor: pointer;
 }
+
+.bill-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.bill-restore,
+.bill-delete-history {
+  border: 0;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.bill-restore {
+  background: #0f766e;
+  color: #fff;
+}
+
+.bill-delete-history {
+  background: #64748b;
+  color: #fff;
+}
