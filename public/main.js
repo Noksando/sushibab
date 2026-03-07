@@ -15,7 +15,6 @@ const billAmount = document.getElementById("billAmount");
 
 let currentState = { stores: {}, openedBills: [] };
 let selectedStore = "";
-let dragFromIndex = null;
 
 function formatEUR(amount) {
   return new Intl.NumberFormat("de-DE", {
@@ -60,7 +59,6 @@ function renderInventory() {
   items.forEach(([itemName, quantity]) => {
     const row = document.createElement("div");
     row.className = "inventory-item";
-    row.draggable = true;
 
     const name = document.createElement("div");
     name.textContent = `${itemName}`;
@@ -83,43 +81,73 @@ function renderInventory() {
       socket.emit("inventory:change", { storeName: selectedStore, itemName, delta: 1 });
     });
 
+    const actionGroup = document.createElement("div");
+    actionGroup.className = "item-menu";
+
+    const menuBtn = document.createElement("button");
+    menuBtn.className = "item-menu-btn";
+    menuBtn.textContent = "☰";
+    menuBtn.title = "항목 메뉴";
+    menuBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const alreadyOpen = actionGroup.classList.contains("open");
+      document.querySelectorAll(".item-menu.open").forEach((el) => el.classList.remove("open"));
+      if (!alreadyOpen) {
+        actionGroup.classList.add("open");
+      }
+    });
+
+    const menuPanel = document.createElement("div");
+    menuPanel.className = "item-menu-panel";
+
+    const moveUp = document.createElement("button");
+    moveUp.textContent = "위로";
+    moveUp.disabled = indexOfItem(items, itemName) === 0;
+    moveUp.addEventListener("click", () => {
+      const currentIndex = indexOfItem(items, itemName);
+      if (currentIndex <= 0) {
+        return;
+      }
+      socket.emit("inventory:reorder", {
+        storeName: selectedStore,
+        fromIndex: currentIndex,
+        toIndex: currentIndex - 1
+      });
+    });
+
+    const moveDown = document.createElement("button");
+    moveDown.textContent = "아래로";
+    moveDown.disabled = indexOfItem(items, itemName) === items.length - 1;
+    moveDown.addEventListener("click", () => {
+      const currentIndex = indexOfItem(items, itemName);
+      if (currentIndex < 0 || currentIndex >= items.length - 1) {
+        return;
+      }
+      socket.emit("inventory:reorder", {
+        storeName: selectedStore,
+        fromIndex: currentIndex,
+        toIndex: currentIndex + 1
+      });
+    });
+
     const remove = document.createElement("button");
-    remove.className = "item-remove";
+    remove.className = "menu-danger";
     remove.textContent = "삭제";
     remove.addEventListener("click", () => {
       socket.emit("inventory:removeItem", { storeName: selectedStore, itemName });
     });
 
-    row.addEventListener("dragstart", () => {
-      dragFromIndex = items.findIndex(([nameValue]) => nameValue === itemName);
-      row.classList.add("dragging");
-    });
+    menuPanel.append(moveUp, moveDown, remove);
+    actionGroup.append(menuBtn, menuPanel);
 
-    row.addEventListener("dragend", () => {
-      dragFromIndex = null;
-      row.classList.remove("dragging");
-    });
-
-    row.addEventListener("dragover", (event) => {
-      event.preventDefault();
-    });
-
-    row.addEventListener("drop", () => {
-      const dropIndex = items.findIndex(([nameValue]) => nameValue === itemName);
-      if (dragFromIndex === null || dropIndex === -1 || dragFromIndex === dropIndex) {
-        return;
-      }
-      socket.emit("inventory:reorder", {
-        storeName: selectedStore,
-        fromIndex: dragFromIndex,
-        toIndex: dropIndex
-      });
-    });
-
-    controls.append(minus, qty, plus, remove);
+    controls.append(minus, qty, plus, actionGroup);
     row.append(name, controls);
     inventoryListEl.appendChild(row);
   });
+}
+
+function indexOfItem(items, itemName) {
+  return items.findIndex(([nameValue]) => nameValue === itemName);
 }
 
 function renderBills() {
@@ -173,4 +201,8 @@ socket.on("state:update", (state) => {
   renderStoreTabs();
   renderInventory();
   renderBills();
+});
+
+document.addEventListener("click", () => {
+  document.querySelectorAll(".item-menu.open").forEach((el) => el.classList.remove("open"));
 });

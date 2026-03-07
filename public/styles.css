@@ -67,11 +67,6 @@ h1 {
   padding: 8px;
   border: 1px solid #dce4ea;
   border-radius: 10px;
-  cursor: grab;
-}
-
-.inventory-item.dragging {
-  opacity: 0.45;
 }
 
 .qty-controls {
@@ -89,10 +84,50 @@ h1 {
   cursor: pointer;
 }
 
-.item-remove {
+.item-menu {
+  position: relative;
+}
+
+.item-menu-btn {
+  width: 34px !important;
+  height: 28px !important;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.item-menu-panel {
+  position: absolute;
+  top: 34px;
+  right: 0;
+  z-index: 10;
+  display: none;
+  min-width: 90px;
+  padding: 6px;
+  background: #fff;
+  border: 1px solid #dce4ea;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.item-menu.open .item-menu-panel {
+  display: grid;
+  gap: 6px;
+}
+
+.item-menu-panel button {
   width: auto !important;
   height: auto !important;
-  padding: 6px 10px;
+  padding: 7px 8px;
+  text-align: left;
+  background: #eef2f7 !important;
+}
+
+.item-menu-panel button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.item-menu-panel .menu-danger {
   background: #ef4444 !important;
   color: #fff;
 }
