@@ -28,6 +28,24 @@ function formatEUR(amount) {
   }).format(amount);
 }
 
+function parseAmountInput(rawValue) {
+  const normalized = String(rawValue || "")
+    .trim()
+    .replace(/\s/g, "")
+    .replace(/,/g, "");
+  if (!normalized) {
+    return null;
+  }
+  if (!/^\d+(\.\d{1,2})?$/.test(normalized)) {
+    return null;
+  }
+  const amount = Number(normalized);
+  if (!Number.isFinite(amount) || amount < 0) {
+    return null;
+  }
+  return amount;
+}
+
 function renderStoreTabs() {
   const storeNames = Object.keys(currentState.stores);
   if (!selectedStore && storeNames.length > 0) {
@@ -300,10 +318,16 @@ addItemForm.addEventListener("submit", (event) => {
 
 billForm.addEventListener("submit", (event) => {
   event.preventDefault();
+  const parsedAmount = parseAmountInput(billAmount.value);
+  if (parsedAmount === null) {
+    window.alert("금액 형식이 올바르지 않습니다. 예: 1,200 또는 175.33");
+    billAmount.focus();
+    return;
+  }
   socket.emit("bill:add", {
     company: billCompany.value.trim(),
     receivedAt: billDate.value,
-    amount: Number(billAmount.value),
+    amount: parsedAmount,
     reference: billReference.value.trim()
   });
   billForm.reset();
