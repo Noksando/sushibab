@@ -145,14 +145,19 @@ h1 {
 }
 
 .notice-board {
-  margin-top: 14px;
   padding: 12px;
   border-radius: 12px;
   background: #fff9c4;
   border: 1px solid #facc15;
 }
 
-.notice-board h3 {
+.notice-board-top {
+  position: sticky;
+  top: 10px;
+  z-index: 5;
+}
+
+.notice-board h2 {
   margin: 0 0 6px;
   font-size: 18px;
 }
@@ -268,4 +273,10 @@ h1 {
 .bill-delete-history {
   background: #64748b;
   color: #fff;
+}
+
+@media (max-width: 760px) {
+  .notice-board-top {
+    position: static;
+  }
 }
