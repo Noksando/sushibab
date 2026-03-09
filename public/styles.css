@@ -12,7 +12,7 @@ body {
 .container {
   max-width: 900px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 190px 20px 20px;
 }
 
 h1 {
@@ -152,9 +152,12 @@ h1 {
 }
 
 .notice-board-top {
-  position: sticky;
-  top: 10px;
-  z-index: 5;
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(900px, calc(100vw - 24px));
+  z-index: 100;
 }
 
 .notice-board h2 {
@@ -168,6 +171,8 @@ h1 {
   margin: 10px 0 0;
   display: grid;
   gap: 8px;
+  max-height: 210px;
+  overflow: auto;
 }
 
 .notice-item {
@@ -273,10 +278,4 @@ h1 {
 .bill-delete-history {
   background: #64748b;
   color: #fff;
-}
-
-@media (max-width: 760px) {
-  .notice-board-top {
-    position: static;
-  }
 }
