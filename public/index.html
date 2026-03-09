@@ -21,6 +21,16 @@
           <input id="newItemQty" type="number" min="0" placeholder="수량" required />
           <button type="submit">재고 추가</button>
         </form>
+
+        <section class="notice-board">
+          <h3>매장 공지 알림판</h3>
+          <p class="hint">현재 선택한 매장 이름으로 메모가 등록되고, 전체 직원이 함께 봅니다.</p>
+          <form id="noticeForm" class="row-form">
+            <input id="noticeInput" type="text" maxlength="120" placeholder="예: 오늘 저녁 바쁠 것 같음" required />
+            <button type="submit">공지 등록</button>
+          </form>
+          <ul id="noticeList" class="notice-list"></ul>
+        </section>
       </section>
 
       <section class="card">

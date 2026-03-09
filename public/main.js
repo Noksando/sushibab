@@ -2,12 +2,15 @@ const socket = io();
 
 const storeTabsEl = document.getElementById("storeTabs");
 const inventoryListEl = document.getElementById("inventoryList");
+const noticeListEl = document.getElementById("noticeList");
 const billListEl = document.getElementById("billList");
 const paidBillListEl = document.getElementById("paidBillList");
 
 const addItemForm = document.getElementById("addItemForm");
 const newItemName = document.getElementById("newItemName");
 const newItemQty = document.getElementById("newItemQty");
+const noticeForm = document.getElementById("noticeForm");
+const noticeInput = document.getElementById("noticeInput");
 
 const billForm = document.getElementById("billForm");
 const billCompany = document.getElementById("billCompany");
@@ -15,7 +18,7 @@ const billDate = document.getElementById("billDate");
 const billAmount = document.getElementById("billAmount");
 const billReference = document.getElementById("billReference");
 
-let currentState = { stores: {}, openedBills: [], paidBills: [] };
+let currentState = { stores: {}, openedBills: [], paidBills: [], notices: [] };
 let selectedStore = "";
 let dragFromIndex = null;
 let touchDragFromIndex = null;
@@ -256,6 +259,37 @@ function renderBills() {
   });
 }
 
+function renderNotices() {
+  noticeListEl.innerHTML = "";
+  const notices = Array.isArray(currentState.notices) ? currentState.notices : [];
+
+  if (notices.length === 0) {
+    noticeListEl.innerHTML = "<li>등록된 공지가 없습니다.</li>";
+    return;
+  }
+
+  notices.forEach((notice) => {
+    const li = document.createElement("li");
+    li.className = "notice-item";
+    li.innerHTML = `
+      <div class="notice-top">
+        <span class="notice-store">${notice.storeName}</span>
+        <small>${formatDateTime(notice.createdAt)}</small>
+      </div>
+      <div class="notice-content">${notice.content}</div>
+      <button class="notice-remove">삭제</button>
+    `;
+    li.querySelector(".notice-remove").addEventListener("click", () => {
+      const ok = window.confirm("이 공지를 삭제할까요?");
+      if (!ok) {
+        return;
+      }
+      socket.emit("notice:remove", { id: notice.id });
+    });
+    noticeListEl.appendChild(li);
+  });
+}
+
 function formatDateTime(dateLike) {
   if (!dateLike) {
     return "-";
@@ -316,6 +350,18 @@ addItemForm.addEventListener("submit", (event) => {
   addItemForm.reset();
 });
 
+noticeForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  if (!selectedStore) {
+    return;
+  }
+  socket.emit("notice:add", {
+    storeName: selectedStore,
+    content: noticeInput.value.trim()
+  });
+  noticeForm.reset();
+});
+
 billForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const parsedAmount = parseAmountInput(billAmount.value);
@@ -337,6 +383,7 @@ socket.on("state:update", (state) => {
   currentState = state;
   renderStoreTabs();
   renderInventory();
+  renderNotices();
   renderBills();
   renderPaidBills();
 });

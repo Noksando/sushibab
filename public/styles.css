@@ -144,6 +144,68 @@ h1 {
   cursor: pointer;
 }
 
+.notice-board {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #fff9c4;
+  border: 1px solid #facc15;
+}
+
+.notice-board h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.notice-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+  display: grid;
+  gap: 8px;
+}
+
+.notice-item {
+  background: #fffef0;
+  border: 1px solid #fcd34d;
+  border-radius: 10px;
+  padding: 8px;
+  display: grid;
+  gap: 6px;
+}
+
+.notice-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+
+.notice-store {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  background: #f59e0b;
+  color: #fff;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.notice-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.notice-remove {
+  width: fit-content;
+  border: 0;
+  border-radius: 8px;
+  padding: 5px 9px;
+  background: #64748b;
+  color: #fff;
+  cursor: pointer;
+}
+
 .bill-list {
   list-style: none;
   padding: 0;

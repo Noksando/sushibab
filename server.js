@@ -40,7 +40,8 @@ const defaultData = {
       reference: ""
     }
   ],
-  paidBills: []
+  paidBills: [],
+  notices: []
 };
 
 function normalizeState(rawData) {
@@ -54,10 +55,17 @@ function normalizeState(rawData) {
   if (!Array.isArray(next.paidBills)) {
     next.paidBills = [];
   }
+  if (!Array.isArray(next.notices)) {
+    next.notices = [];
+  }
   next.paidBills = next.paidBills
     .filter((bill) => bill && typeof bill === "object")
     .sort((a, b) => String(b.paidAt || "").localeCompare(String(a.paidAt || "")))
     .slice(0, 10);
+  next.notices = next.notices
+    .filter((notice) => notice && typeof notice === "object")
+    .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))
+    .slice(0, 30);
   return next;
 }
 
@@ -191,6 +199,33 @@ io.on("connection", (socket) => {
 
   socket.on("bill:deletePaid", ({ id }) => {
     state.paidBills = state.paidBills.filter((bill) => bill.id !== id);
+    saveData(state);
+    broadcastState();
+  });
+
+  socket.on("notice:add", ({ storeName, content }) => {
+    if (!storeName || typeof content !== "string") {
+      return;
+    }
+    const trimmed = content.trim();
+    if (!trimmed || trimmed.length > 120) {
+      return;
+    }
+    state.notices.unshift({
+      id: `notice-${Date.now()}`,
+      storeName,
+      content: trimmed,
+      createdAt: new Date().toISOString()
+    });
+    state.notices = state.notices
+      .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))
+      .slice(0, 30);
+    saveData(state);
+    broadcastState();
+  });
+
+  socket.on("notice:remove", ({ id }) => {
+    state.notices = state.notices.filter((notice) => notice.id !== id);
     saveData(state);
     broadcastState();
   });
